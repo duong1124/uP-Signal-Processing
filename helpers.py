@@ -2,9 +2,10 @@ import os
 import numpy as np
 import pandas as pd
 from typing import Optional, List
-from scipy.signal import find_peaks, butter, filtfilt
+from scipy.signal import find_peaks, butter, filtfilt, sosfilt
 import heartpy as hp
 import matplotlib.pyplot as plt
+import signal
 
 def read_log_to_csv(
     data_path: str,
@@ -151,11 +152,11 @@ def calculate_bpm_per_window(pcg_signal, fs, bpm_window_sec=60):
         segment = pcg_signal[start:end]
 
         # Bandpass filter (giả sử tần số PCG 20–50Hz)
-        sos = signal.butter(4, [20, min(50, fs / 2 - 1)], btype='bandpass', fs=fs, output='sos')
-        filtered = signal.sosfilt(sos, segment)
+        sos = butter(4, [20, min(50, fs / 2 - 1)], btype='bandpass', fs=fs, output='sos')
+        filtered = sosfilt(sos, segment)
 
         # Peak detection
-        peaks, _ = signal.find_peaks(filtered, distance=fs*0.3, height=np.max(filtered)*0.3)
+        peaks, _ = find_peaks(filtered, distance=fs*0.3, height=np.max(filtered)*0.3)
         rr_intervals = np.diff(peaks) / fs
 
         # Tính BPM
